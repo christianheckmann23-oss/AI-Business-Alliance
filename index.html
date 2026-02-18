@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>AIBA - AI Business Alliance | Ohio University</title>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <style>
         * {
             margin: 0;
@@ -165,6 +166,17 @@
             background: transparent;
             color: var(--text-light);
             border: 2px solid var(--text-light);
+        }
+
+        .btn-danger {
+            background: #c62828;
+            color: var(--text-light);
+        }
+
+        .btn-outline {
+            background: transparent;
+            color: var(--primary-color);
+            border: 2px solid var(--primary-color);
         }
 
         .btn:hover {
@@ -499,6 +511,45 @@
         .home-section.active {
             display: block;
         }
+
+        .erp-panel {
+            max-width: 950px;
+            margin: 0 auto;
+            background: #ffffff;
+            border-radius: 12px;
+            padding: 2rem;
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
+        }
+
+        .erp-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+            gap: 1rem;
+            margin-top: 1rem;
+        }
+
+        .erp-folder {
+            border: 1px solid #e5e7eb;
+            border-radius: 10px;
+            padding: 1rem;
+            background: #f8f9fa;
+        }
+
+        .erp-document {
+            border-left: 4px solid var(--primary-color);
+            padding-left: 0.75rem;
+            margin-top: 0.75rem;
+        }
+
+        .erp-helper {
+            color: #5b6470;
+            font-size: 0.95rem;
+            margin-bottom: 1rem;
+        }
+
+        .hidden {
+            display: none !important;
+        }
     </style>
 </head>
 <body>
@@ -515,6 +566,7 @@
                 <li><a href="#" class="nav-link" onclick="showSection('teams')">Teams</a></li>
                 <li><a href="#" class="nav-link" onclick="showSection('leadership')">Leadership</a></li>
                 <li><a href="#" class="nav-link" onclick="showSection('events')">Events</a></li>
+                <li><a href="#" class="nav-link" onclick="showSection('erp')">Fraternity ERP</a></li>
                 <li><a href="#" class="nav-link" onclick="showSection('resources')">Resources</a></li>
                 <li><a href="#" class="nav-link" onclick="showSection('membership')">Join Us</a></li>
                 <li><a href="#" class="nav-link" onclick="showSection('contact')">Contact</a></li>
@@ -787,6 +839,106 @@
         </div>
     </section>
 
+    <!-- Fraternity ERP Section -->
+    <section id="erp" class="page-section">
+        <div class="section">
+            <h2 class="section-title">Fraternity Operations ERP</h2>
+            <div class="erp-panel" id="erpLoginPanel">
+                <h3 style="color: var(--primary-color); margin-bottom: 0.75rem;">Member Access</h3>
+                <p class="erp-helper">Use the shared chapter password to access cabinet and executive forms. Individual accounts are not required.</p>
+                <form onsubmit="loginErp(event)">
+                    <div class="form-group">
+                        <label for="erpPassword">Shared Password</label>
+                        <input type="password" id="erpPassword" required placeholder="Enter universal chapter password">
+                    </div>
+                    <button type="submit" class="btn btn-primary">Enter ERP</button>
+                </form>
+            </div>
+
+            <div class="erp-panel hidden" id="erpDashboard">
+                <div style="display: flex; justify-content: space-between; align-items: center; gap: 1rem; flex-wrap: wrap;">
+                    <h3 style="color: var(--primary-color);">Cabinet + Executive Documentation Workspace</h3>
+                    <button class="btn btn-danger" onclick="logoutErp()">Log Out</button>
+                </div>
+                <p class="erp-helper">Submit forms, generate clean template-based documents (including PDF), and archive by folder for future member access.</p>
+
+                <form onsubmit="submitErpRecord(event)">
+                    <div class="erp-grid">
+                        <div class="form-group">
+                            <label for="erpMemberName">Submitted By</label>
+                            <input type="text" id="erpMemberName" required placeholder="e.g., VP Operations">
+                        </div>
+                        <div class="form-group">
+                            <label for="erpFolder">Folder / Department</label>
+                            <select id="erpFolder" required style="width: 100%; padding: 12px; border: 2px solid #e0e0e0; border-radius: 5px;">
+                                <option value="">Select folder</option>
+                                <option value="Executive Board">Executive Board</option>
+                                <option value="Cabinet">Cabinet</option>
+                                <option value="Recruitment">Recruitment</option>
+                                <option value="Philanthropy">Philanthropy</option>
+                                <option value="Finance">Finance</option>
+                                <option value="Social">Social</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="erpDocType">Form Type</label>
+                            <select id="erpDocType" required style="width: 100%; padding: 12px; border: 2px solid #e0e0e0; border-radius: 5px;">
+                                <option value="">Select form type</option>
+                                <option value="Meeting Notes">Meeting Notes</option>
+                                <option value="Event Plan">Event Plan</option>
+                                <option value="Budget Request">Budget Request</option>
+                                <option value="Incident Report">Incident Report</option>
+                                <option value="General Update">General Update</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="erpTemplate">Document Template</label>
+                            <select id="erpTemplate" required style="width: 100%; padding: 12px; border: 2px solid #e0e0e0; border-radius: 5px;">
+                                <option value="">Select template</option>
+                                <option value="Meeting Minutes">Meeting Minutes</option>
+                                <option value="Event Recap">Event Recap</option>
+                                <option value="Budget Summary">Budget Summary</option>
+                                <option value="Incident Follow-Up">Incident Follow-Up</option>
+                                <option value="General Ops Memo">General Ops Memo</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="erpTitle">Document Title</label>
+                            <input type="text" id="erpTitle" required placeholder="e.g., Homecoming Event Debrief">
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label for="erpSummary">Summary</label>
+                        <textarea id="erpSummary" rows="3" required placeholder="Short summary of this update or event."></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label for="erpDetails">Details / Action Items</label>
+                        <textarea id="erpDetails" rows="6" required placeholder="Include timelines, responsibilities, decisions, and follow-up tasks."></textarea>
+                    </div>
+                    <button type="submit" class="btn btn-primary">Save + Generate Document</button>
+                </form>
+
+                <div style="margin-top: 2rem;">
+                    <h3 style="color: var(--primary-color);">Archived Documents</h3>
+                    <div class="form-group" style="max-width: 320px; margin-top: 1rem;">
+                        <label for="erpFilterFolder">Filter by Folder</label>
+                        <select id="erpFilterFolder" onchange="renderErpDocuments()" style="width: 100%; padding: 12px; border: 2px solid #e0e0e0; border-radius: 5px;">
+                            <option value="all">All folders</option>
+                            <option value="Executive Board">Executive Board</option>
+                            <option value="Cabinet">Cabinet</option>
+                            <option value="Recruitment">Recruitment</option>
+                            <option value="Philanthropy">Philanthropy</option>
+                            <option value="Finance">Finance</option>
+                            <option value="Social">Social</option>
+                        </select>
+                    </div>
+                    <div id="erpDocumentsContainer" class="erp-grid"></div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+
     <!-- Resources Section -->
     <section id="resources" class="page-section">
         <div class="section">
@@ -1055,6 +1207,7 @@
                     <li><a href="#" onclick="showSection('about')" style="color: var(--text-light); text-decoration: none;">About Us</a></li>
                     <li><a href="#" onclick="showSection('teams')" style="color: var(--text-light); text-decoration: none;">Our Teams</a></li>
                     <li><a href="#" onclick="showSection('events')" style="color: var(--text-light); text-decoration: none;">Events</a></li>
+                    <li><a href="#" onclick="showSection('erp')" style="color: var(--text-light); text-decoration: none;">Fraternity ERP</a></li>
                     <li><a href="#" onclick="showSection('resources')" style="color: var(--text-light); text-decoration: none;">Resources</a></li>
                     <li><a href="#" onclick="showSection('membership')" style="color: var(--text-light); text-decoration: none;">Join Us</a></li>
                 </ul>
@@ -1094,6 +1247,10 @@
             const targetSection = document.getElementById(sectionName);
             if (targetSection) {
                 targetSection.classList.add('active');
+            }
+
+            if (sectionName === 'erp') {
+                syncErpAccess();
             }
             
             // Close mobile menu if open
@@ -1135,6 +1292,257 @@
             event.target.reset();
         }
 
+
+        const ERP_SHARED_PASSWORD = 'AIBA-CABINET-2025';
+        const ERP_AUTH_KEY = 'aibaErpAuthenticated';
+        const ERP_DOCS_KEY = 'aibaErpDocuments';
+
+        function isErpAuthenticated() {
+            return localStorage.getItem(ERP_AUTH_KEY) === 'true';
+        }
+
+        function syncErpAccess() {
+            const loginPanel = document.getElementById('erpLoginPanel');
+            const dashboard = document.getElementById('erpDashboard');
+            if (!loginPanel || !dashboard) {
+                return;
+            }
+
+            if (isErpAuthenticated()) {
+                loginPanel.classList.add('hidden');
+                dashboard.classList.remove('hidden');
+                renderErpDocuments();
+            } else {
+                loginPanel.classList.remove('hidden');
+                dashboard.classList.add('hidden');
+            }
+        }
+
+        function loginErp(event) {
+            event.preventDefault();
+            const passwordField = document.getElementById('erpPassword');
+            const suppliedPassword = passwordField.value.trim();
+
+            if (suppliedPassword !== ERP_SHARED_PASSWORD) {
+                alert('Incorrect shared password. Please ask an executive board member for the current code.');
+                return;
+            }
+
+            localStorage.setItem(ERP_AUTH_KEY, 'true');
+            passwordField.value = '';
+            syncErpAccess();
+        }
+
+        function logoutErp() {
+            localStorage.removeItem(ERP_AUTH_KEY);
+            syncErpAccess();
+        }
+
+        function getErpDocuments() {
+            return JSON.parse(localStorage.getItem(ERP_DOCS_KEY) || '[]');
+        }
+
+        function saveErpDocuments(documents) {
+            localStorage.setItem(ERP_DOCS_KEY, JSON.stringify(documents));
+        }
+
+        function generateErpDocumentText(record) {
+            return `AIBA FRATERNITY ERP RECORD
+========================
+Title: ${record.title}
+Folder: ${record.folder}
+Form Type: ${record.docType}
+Template: ${record.template || 'General Ops Memo'}
+Submitted By: ${record.memberName}
+Created: ${new Date(record.createdAt).toLocaleString()}
+
+Summary
+-------
+${record.summary}
+
+Details / Action Items
+----------------------
+${record.details}
+`;
+        }
+
+
+        function getTemplateSections(record) {
+            const detailLines = record.details.split(/\n+/).filter(Boolean);
+            const defaultActions = detailLines.length ? detailLines : ['No action items provided'];
+
+            const templates = {
+                'Meeting Minutes': [
+                    ['Meeting Objective', record.summary],
+                    ['Key Discussion Points', record.details],
+                    ['Decisions & Action Items', defaultActions.map((line) => `• ${line}`).join('\n')]
+                ],
+                'Event Recap': [
+                    ['Event Overview', record.summary],
+                    ['Execution Notes', record.details],
+                    ['Next Event Improvements', defaultActions.map((line) => `• ${line}`).join('\n')]
+                ],
+                'Budget Summary': [
+                    ['Budget Context', record.summary],
+                    ['Requested/Allocated Details', record.details],
+                    ['Financial Follow-Up', defaultActions.map((line) => `• ${line}`).join('\n')]
+                ],
+                'Incident Follow-Up': [
+                    ['Incident Summary', record.summary],
+                    ['Documented Details', record.details],
+                    ['Corrective Actions', defaultActions.map((line) => `• ${line}`).join('\n')]
+                ],
+                'General Ops Memo': [
+                    ['Memo Summary', record.summary],
+                    ['Operational Details', record.details],
+                    ['Follow-Up Tasks', defaultActions.map((line) => `• ${line}`).join('\n')]
+                ]
+            };
+
+            return templates[record.template] || templates['General Ops Memo'];
+        }
+
+        function downloadErpPdf(documentId) {
+            const documents = getErpDocuments();
+            const record = documents.find((item) => item.id === documentId);
+            if (!record) {
+                return;
+            }
+
+            if (!window.jspdf || !window.jspdf.jsPDF) {
+                alert('PDF generator is not available right now. Please check your connection and try again.');
+                return;
+            }
+
+            const { jsPDF } = window.jspdf;
+            const pdf = new jsPDF({ unit: 'pt', format: 'letter' });
+            const left = 54;
+            const lineHeight = 16;
+            let y = 60;
+
+            pdf.setFont('helvetica', 'bold');
+            pdf.setFontSize(18);
+            pdf.text('Fraternity Operations Record', left, y);
+            y += 24;
+
+            pdf.setFontSize(11);
+            pdf.setFont('helvetica', 'normal');
+            const headerLines = [
+                `Title: ${record.title}`,
+                `Folder: ${record.folder}`,
+                `Form Type: ${record.docType}`,
+                `Template: ${record.template || 'General Ops Memo'}`,
+                `Submitted By: ${record.memberName}`,
+                `Created: ${new Date(record.createdAt).toLocaleString()}`
+            ];
+
+            headerLines.forEach((line) => {
+                pdf.text(line, left, y);
+                y += lineHeight;
+            });
+
+            y += 6;
+            const sections = getTemplateSections(record);
+            sections.forEach(([heading, body]) => {
+                if (y > 700) {
+                    pdf.addPage();
+                    y = 60;
+                }
+                pdf.setFont('helvetica', 'bold');
+                pdf.text(heading, left, y);
+                y += lineHeight;
+                pdf.setFont('helvetica', 'normal');
+                const wrapped = pdf.splitTextToSize(body || 'N/A', 500);
+                pdf.text(wrapped, left, y);
+                y += wrapped.length * lineHeight + 10;
+            });
+
+            const fileName = `${record.folder.replace(/\s+/g, '_')}-${record.title.replace(/[^a-z0-9]/gi, '_')}.pdf`;
+            pdf.save(fileName);
+        }
+
+
+        function submitErpRecord(event) {
+            event.preventDefault();
+
+            if (!isErpAuthenticated()) {
+                alert('Please log in with the shared password to submit records.');
+                return;
+            }
+
+            const record = {
+                id: Date.now(),
+                memberName: document.getElementById('erpMemberName').value.trim(),
+                folder: document.getElementById('erpFolder').value,
+                docType: document.getElementById('erpDocType').value,
+                template: document.getElementById('erpTemplate').value,
+                title: document.getElementById('erpTitle').value.trim(),
+                summary: document.getElementById('erpSummary').value.trim(),
+                details: document.getElementById('erpDetails').value.trim(),
+                createdAt: new Date().toISOString()
+            };
+
+            const documents = getErpDocuments();
+            documents.unshift({ ...record, generatedDocument: generateErpDocumentText(record) });
+            saveErpDocuments(documents);
+
+            alert('Record saved and converted into a downloadable document.');
+            event.target.reset();
+            renderErpDocuments();
+        }
+
+        function downloadErpDocument(documentId) {
+            const documents = getErpDocuments();
+            const documentRecord = documents.find((item) => item.id === documentId);
+            if (!documentRecord) {
+                return;
+            }
+
+            const blob = new Blob([documentRecord.generatedDocument], { type: 'text/plain;charset=utf-8' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `${documentRecord.folder.replace(/\s+/g, '_')}-${documentRecord.title.replace(/[^a-z0-9]/gi, '_')}.txt`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+        }
+
+        function renderErpDocuments() {
+            const container = document.getElementById('erpDocumentsContainer');
+            if (!container) {
+                return;
+            }
+
+            const selectedFolder = document.getElementById('erpFilterFolder')?.value || 'all';
+            const documents = getErpDocuments().filter((item) => selectedFolder === 'all' || item.folder === selectedFolder);
+
+            if (!documents.length) {
+                container.innerHTML = '<div class="erp-folder"><p>No records yet for this folder. Submit a form to create your first document.</p></div>';
+                return;
+            }
+
+            container.innerHTML = documents.map((item) => `
+                <div class="erp-folder">
+                    <h4 style="color: var(--primary-color);">${item.folder}</h4>
+                    <div class="erp-document">
+                        <p><strong>${item.title}</strong></p>
+                        <p style="font-size: 0.9rem;"><strong>Type:</strong> ${item.docType}</p>
+                        <p style="font-size: 0.9rem;"><strong>Template:</strong> ${item.template || 'General Ops Memo'}</p>
+                        <p style="font-size: 0.9rem;"><strong>By:</strong> ${item.memberName}</p>
+                        <p style="font-size: 0.9rem;"><strong>Created:</strong> ${new Date(item.createdAt).toLocaleDateString()}</p>
+                        <p style="margin-top: 0.5rem;">${item.summary}</p>
+                        <div style="display: flex; gap: 0.5rem; flex-wrap: wrap; margin-top: 0.75rem;">
+                            <button class="btn btn-primary" onclick="downloadErpPdf(${item.id})">Download PDF</button>
+                            <button class="btn btn-outline" onclick="downloadErpDocument(${item.id})">Download TXT</button>
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+
         // Animation on scroll
         function animateOnScroll() {
             const elements = document.querySelectorAll('.team-card, .leader-card, .event-card, .stat-card');
@@ -1161,7 +1569,8 @@
         // Initialize page
         document.addEventListener('DOMContentLoaded', () => {
             animateOnScroll();
-            
+            syncErpAccess();
+
             // Add smooth scrolling for better UX
             document.documentElement.style.scrollBehavior = 'smooth';
         });
