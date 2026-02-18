@@ -861,6 +861,7 @@
                     <button class="btn btn-danger" onclick="logoutErp()">Log Out</button>
                 </div>
                 <p class="erp-helper">Submit forms, generate clean template-based documents (including PDF), and archive by folder for future member access.</p>
+                <p class="erp-helper">Submit forms, convert to downloadable documents, and archive by folder for future member access.</p>
 
                 <form onsubmit="submitErpRecord(event)">
                     <div class="erp-grid">
@@ -1537,6 +1538,10 @@ ${record.details}
                             <button class="btn btn-primary" onclick="downloadErpPdf(${item.id})">Download PDF</button>
                             <button class="btn btn-outline" onclick="downloadErpDocument(${item.id})">Download TXT</button>
                         </div>
+                        <p style="font-size: 0.9rem;"><strong>By:</strong> ${item.memberName}</p>
+                        <p style="font-size: 0.9rem;"><strong>Created:</strong> ${new Date(item.createdAt).toLocaleDateString()}</p>
+                        <p style="margin-top: 0.5rem;">${item.summary}</p>
+                        <button class="btn btn-primary" style="margin-top: 0.75rem;" onclick="downloadErpDocument(${item.id})">Download Document</button>
                     </div>
                 </div>
             `).join('');

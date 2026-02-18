@@ -6,6 +6,7 @@ This site now includes a **Fraternity ERP** workflow for cabinet and executive m
 - Shared-password login (no individual accounts required).
 - Structured form submission for operations records.
 - Automatic conversion of submissions into templated documents with clean PDF export (plus TXT fallback).
+- Automatic conversion of submissions into downloadable document files.
 - Local archive grouped by folder/department so current and future members can reference past resources.
 
 ### Shared password configuration
