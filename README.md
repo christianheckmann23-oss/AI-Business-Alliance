@@ -5,9 +5,14 @@ AI Business Alliance (AIBA) is a student organization at Ohio University dedicat
 This site now includes a **Fraternity ERP** workflow for cabinet and executive members:
 - Shared-password login (no individual accounts required).
 - Structured form submission for operations records.
+- Automatic conversion of submissions into templated documents with clean PDF export (plus TXT fallback).
 - Automatic conversion of submissions into downloadable document files.
 - Local archive grouped by folder/department so current and future members can reference past resources.
 
 ### Shared password configuration
 The default shared password is configured in `index.html` as `ERP_SHARED_PASSWORD`.
 Update this value before production deployment.
+
+
+### Document templates
+Members can choose from multiple templates (Meeting Minutes, Event Recap, Budget Summary, Incident Follow-Up, and General Ops Memo) before saving a record.

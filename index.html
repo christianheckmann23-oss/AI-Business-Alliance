@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>AIBA - AI Business Alliance | Ohio University</title>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <style>
         * {
             margin: 0;
@@ -170,6 +171,12 @@
         .btn-danger {
             background: #c62828;
             color: var(--text-light);
+        }
+
+        .btn-outline {
+            background: transparent;
+            color: var(--primary-color);
+            border: 2px solid var(--primary-color);
         }
 
         .btn:hover {
@@ -853,6 +860,7 @@
                     <h3 style="color: var(--primary-color);">Cabinet + Executive Documentation Workspace</h3>
                     <button class="btn btn-danger" onclick="logoutErp()">Log Out</button>
                 </div>
+                <p class="erp-helper">Submit forms, generate clean template-based documents (including PDF), and archive by folder for future member access.</p>
                 <p class="erp-helper">Submit forms, convert to downloadable documents, and archive by folder for future member access.</p>
 
                 <form onsubmit="submitErpRecord(event)">
@@ -882,6 +890,17 @@
                                 <option value="Budget Request">Budget Request</option>
                                 <option value="Incident Report">Incident Report</option>
                                 <option value="General Update">General Update</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="erpTemplate">Document Template</label>
+                            <select id="erpTemplate" required style="width: 100%; padding: 12px; border: 2px solid #e0e0e0; border-radius: 5px;">
+                                <option value="">Select template</option>
+                                <option value="Meeting Minutes">Meeting Minutes</option>
+                                <option value="Event Recap">Event Recap</option>
+                                <option value="Budget Summary">Budget Summary</option>
+                                <option value="Incident Follow-Up">Incident Follow-Up</option>
+                                <option value="General Ops Memo">General Ops Memo</option>
                             </select>
                         </div>
                         <div class="form-group">
@@ -1334,6 +1353,7 @@
 Title: ${record.title}
 Folder: ${record.folder}
 Form Type: ${record.docType}
+Template: ${record.template || 'General Ops Memo'}
 Submitted By: ${record.memberName}
 Created: ${new Date(record.createdAt).toLocaleString()}
 
@@ -1346,6 +1366,102 @@ Details / Action Items
 ${record.details}
 `;
         }
+
+
+        function getTemplateSections(record) {
+            const detailLines = record.details.split(/\n+/).filter(Boolean);
+            const defaultActions = detailLines.length ? detailLines : ['No action items provided'];
+
+            const templates = {
+                'Meeting Minutes': [
+                    ['Meeting Objective', record.summary],
+                    ['Key Discussion Points', record.details],
+                    ['Decisions & Action Items', defaultActions.map((line) => `• ${line}`).join('\n')]
+                ],
+                'Event Recap': [
+                    ['Event Overview', record.summary],
+                    ['Execution Notes', record.details],
+                    ['Next Event Improvements', defaultActions.map((line) => `• ${line}`).join('\n')]
+                ],
+                'Budget Summary': [
+                    ['Budget Context', record.summary],
+                    ['Requested/Allocated Details', record.details],
+                    ['Financial Follow-Up', defaultActions.map((line) => `• ${line}`).join('\n')]
+                ],
+                'Incident Follow-Up': [
+                    ['Incident Summary', record.summary],
+                    ['Documented Details', record.details],
+                    ['Corrective Actions', defaultActions.map((line) => `• ${line}`).join('\n')]
+                ],
+                'General Ops Memo': [
+                    ['Memo Summary', record.summary],
+                    ['Operational Details', record.details],
+                    ['Follow-Up Tasks', defaultActions.map((line) => `• ${line}`).join('\n')]
+                ]
+            };
+
+            return templates[record.template] || templates['General Ops Memo'];
+        }
+
+        function downloadErpPdf(documentId) {
+            const documents = getErpDocuments();
+            const record = documents.find((item) => item.id === documentId);
+            if (!record) {
+                return;
+            }
+
+            if (!window.jspdf || !window.jspdf.jsPDF) {
+                alert('PDF generator is not available right now. Please check your connection and try again.');
+                return;
+            }
+
+            const { jsPDF } = window.jspdf;
+            const pdf = new jsPDF({ unit: 'pt', format: 'letter' });
+            const left = 54;
+            const lineHeight = 16;
+            let y = 60;
+
+            pdf.setFont('helvetica', 'bold');
+            pdf.setFontSize(18);
+            pdf.text('Fraternity Operations Record', left, y);
+            y += 24;
+
+            pdf.setFontSize(11);
+            pdf.setFont('helvetica', 'normal');
+            const headerLines = [
+                `Title: ${record.title}`,
+                `Folder: ${record.folder}`,
+                `Form Type: ${record.docType}`,
+                `Template: ${record.template || 'General Ops Memo'}`,
+                `Submitted By: ${record.memberName}`,
+                `Created: ${new Date(record.createdAt).toLocaleString()}`
+            ];
+
+            headerLines.forEach((line) => {
+                pdf.text(line, left, y);
+                y += lineHeight;
+            });
+
+            y += 6;
+            const sections = getTemplateSections(record);
+            sections.forEach(([heading, body]) => {
+                if (y > 700) {
+                    pdf.addPage();
+                    y = 60;
+                }
+                pdf.setFont('helvetica', 'bold');
+                pdf.text(heading, left, y);
+                y += lineHeight;
+                pdf.setFont('helvetica', 'normal');
+                const wrapped = pdf.splitTextToSize(body || 'N/A', 500);
+                pdf.text(wrapped, left, y);
+                y += wrapped.length * lineHeight + 10;
+            });
+
+            const fileName = `${record.folder.replace(/\s+/g, '_')}-${record.title.replace(/[^a-z0-9]/gi, '_')}.pdf`;
+            pdf.save(fileName);
+        }
+
 
         function submitErpRecord(event) {
             event.preventDefault();
@@ -1360,6 +1476,7 @@ ${record.details}
                 memberName: document.getElementById('erpMemberName').value.trim(),
                 folder: document.getElementById('erpFolder').value,
                 docType: document.getElementById('erpDocType').value,
+                template: document.getElementById('erpTemplate').value,
                 title: document.getElementById('erpTitle').value.trim(),
                 summary: document.getElementById('erpSummary').value.trim(),
                 details: document.getElementById('erpDetails').value.trim(),
@@ -1413,6 +1530,14 @@ ${record.details}
                     <div class="erp-document">
                         <p><strong>${item.title}</strong></p>
                         <p style="font-size: 0.9rem;"><strong>Type:</strong> ${item.docType}</p>
+                        <p style="font-size: 0.9rem;"><strong>Template:</strong> ${item.template || 'General Ops Memo'}</p>
+                        <p style="font-size: 0.9rem;"><strong>By:</strong> ${item.memberName}</p>
+                        <p style="font-size: 0.9rem;"><strong>Created:</strong> ${new Date(item.createdAt).toLocaleDateString()}</p>
+                        <p style="margin-top: 0.5rem;">${item.summary}</p>
+                        <div style="display: flex; gap: 0.5rem; flex-wrap: wrap; margin-top: 0.75rem;">
+                            <button class="btn btn-primary" onclick="downloadErpPdf(${item.id})">Download PDF</button>
+                            <button class="btn btn-outline" onclick="downloadErpDocument(${item.id})">Download TXT</button>
+                        </div>
                         <p style="font-size: 0.9rem;"><strong>By:</strong> ${item.memberName}</p>
                         <p style="font-size: 0.9rem;"><strong>Created:</strong> ${new Date(item.createdAt).toLocaleDateString()}</p>
                         <p style="margin-top: 0.5rem;">${item.summary}</p>
